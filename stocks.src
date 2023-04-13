@@ -1,0 +1,128 @@
+Sub Stocks()
+
+Dim ws As Worksheet
+
+For Each ws In ThisWorkbook.Worksheets
+
+' declare variables for in-sheet analysis and set initial values
+
+Dim ticker As String
+Dim year_open, year_close, volume As Double
+Dim output_row As Double
+Dim red, green As Integer
+Dim inc_ticker, dec_ticker, vol_ticker As String
+Dim greatest_inc, greatest_dec, greatest_vol As Double
+
+output_row = 2
+volume = 0
+ticker = ""
+red = 3
+green = 4
+greatest_inc = 0
+greatest_dec = 0
+greatest_vol = 0
+
+' set active worksheet
+
+ws.Activate
+
+' header row for output
+Range("I1").Value = "Ticker"
+Range("J1").Value = "Yearly Change"
+Range("K1").Value = "Percent Change"
+Range("L1").Value = "Total Stock Volume"
+
+For wr = 2 To Cells(Rows.Count, 1).End(xlUp).Row
+
+' check if first row of a new ticker symbol. If so:
+' get the ticker symbol and open price
+
+If ticker = "" Then
+    ticker = Cells(wr, 1).Value
+    year_open = Cells(wr, 3).Value
+End If
+
+' add volume to ongoing volume total (always)
+
+volume = volume + Cells(wr, 7).Value
+
+'check if last row of ticker symbol. If so:
+    'get closing price
+    'output ticker, yearly change calc, % change calc, volume
+
+
+If Cells(wr, 1).Value <> Cells(wr + 1, 1).Value Then
+    year_close = Cells(wr, 6).Value
+    Range("I" & output_row).Value = ticker
+    Range("J" & output_row).Value = year_close - year_open
+
+        If year_open <> 0 Then
+            Range("K" & output_row).Value = (year_close - year_open) / year_open
+            Range("K" & output_row).NumberFormat = "0.00%"
+            Else
+            Range("K" & output_row).Value = Null
+        End If
+         
+    Range("L" & output_row).Value = volume
+        
+    'color yearly change cell red if - or green if +
+        
+        If Range("J" & output_row).Value >= 0 Then
+            Range("J" & output_row).Interior.ColorIndex = green
+            Else
+            Range("J" & output_row).Interior.ColorIndex = red
+        End If
+
+    'check if greatest increase, decrease, or volume. If so:
+        'store ticker and value
+        
+    If Range("K" & output_row).Value > greatest_inc Then
+        inc_ticker = ticker
+        greatest_inc = Range("K" & output_row).Value
+    End If
+
+    If Range("K" & output_row).Value < greatest_dec Then
+        dec_ticker = ticker
+        greatest_dec = Range("K" & output_row).Value
+    End If
+
+    If Range("L" & output_row).Value > greatest_vol Then
+        vol_ticker = ticker
+        greatest_vol = Range("L" & output_row).Value
+    End If
+          
+    'reset ticker variable to empty
+    'reset volume to 0
+    'move to next output row
+    
+    ticker = ""
+    volume = 0
+    output_row = output_row + 1
+End If
+
+Next wr
+
+'output greatest increase, decrease, volume
+Range("O2").Value = "Greatest % Increase"
+Range("O3").Value = "Greatest % Decrease"
+Range("O4").Value = "Greatest Total Volume"
+Range("P1").Value = "Ticker"
+Range("Q1").Value = "Value"
+
+Range("P2").Value = inc_ticker
+Range("Q2").Value = greatest_inc
+
+Range("P3").Value = dec_ticker
+Range("Q3").Value = greatest_dec
+
+Range("P4").Value = vol_ticker
+Range("Q4").Value = greatest_vol
+
+Range("Q2:Q3").NumberFormat = "0.00%"
+
+'fit columns to data
+ActiveSheet.UsedRange.EntireColumn.AutoFit
+
+Next ws
+
+End Sub
